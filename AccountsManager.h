@@ -7,11 +7,14 @@
 #include "User.h"
 #include "UserAlreadyExistsException.h"
 #include "UserNotFoundException.h"
+#include "UserFileHandler.h" 
 
 using namespace std;
 
 class AccountsManager {
 private:
+
+    UserFileHandler handler;
     unordered_map<string, User> users;
     int currentUserId = 0;
 
@@ -21,12 +24,25 @@ private:
     string promptPassword();
 public:
     AccountsManager();
+    ~AccountsManager();
     void registerPage();
     User loginPage();
 };
 
+AccountsManager::~AccountsManager() {
+
+  // file save
+
+
+  handler.saveUsersToFile(users);
+  
+}
+
+
 AccountsManager::AccountsManager() {
-    users.insert({"admin", User(++currentUserId, "admin", "admin", true)});
+    //users.insert({"admin", User(++currentUserId, "admin", "admin", 1)});
+
+  handler.loadUsersFormFile(users, currentUserId);
 }
 
 void AccountsManager::registerPage() {
