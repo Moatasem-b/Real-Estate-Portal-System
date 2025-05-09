@@ -15,40 +15,43 @@ private:
     void adminPage(User& admin);
     vector<string> adminOptions();
     void displayOptions(const vector<string>& options);
-    void handleAdminChoice(int choice, User& admin);
+    void handleAdminChoice(int choice);
+
+    void manageUsers();
     vector<string> userManagementOptions();
+    void handleUserManagementChoice(int choice);
+    void removeUserById();
+    int promptUserId();
+    void editUserById();
+
     void manageProperties();
     vector<string> propertyManagementOptions();
+    void handlePropertyManagementChoice(int choice);
+    void removePropertyById();
+    int promptPropertyId();
+    void editPropertyById();
+    void setHighlightById(bool highlight);
     void processPendingProperties();
     void processNextPendingProperty();
-    void handlePropertyManagementChoice(int choice, User& admin);
-    void removePropertyById();
-    void setHighlightById(bool highlight);
-    void editPropertyById();
 
     void userPage(User& user);
-    vector<string> userMenuOptions();
+    vector<string> userOptions();
     void handleUserChoice(int choice, User& user);
-    void submitNewProperty();
+    void manageProfile(User& user);
+    void submitNewProperty(bool isAdmin);
     void searchPropertiesWithFilters();
     vector<string> searchFilterOptions();
     void compareProperties();
-
-    int promptPropertyId();
 public:
-    void start();
     void homePage();
 };
-
-void RealEstatePortalSystem::start() {
-
-}
 
 void RealEstatePortalSystem::homePage() {
     cout << "Welcome to the Real Estate Portal!" << endl;
     cout << "----------------------------------\n" << endl;
 
     int choice = 0;
+    accountsManager.initialize();
     propertiesManager.initialize();
 
     do {
@@ -108,7 +111,7 @@ void RealEstatePortalSystem::adminPage(User& admin) {
     do {
         displayOptions(options);
         choice = promptChoice(1, options.size());
-        handleAdminChoice(choice, admin);
+        handleAdminChoice(choice);
     } while (choice != options.size());
 }
 
@@ -131,13 +134,13 @@ void RealEstatePortalSystem::displayOptions(const vector<string>& options) {
     cout << "----------------------------------" << endl;
 }
 
-void RealEstatePortalSystem::handleAdminChoice(int choice, User& admin) {
+void RealEstatePortalSystem::handleAdminChoice(int choice) {
     switch (choice) {
         case 1:
-            // Manage Users
+            manageUsers();
             break;
         case 2:
-            // Manage Properties
+            manageProperties();
             break;
         case 3:
             processPendingProperties();
@@ -150,18 +153,73 @@ void RealEstatePortalSystem::handleAdminChoice(int choice, User& admin) {
     }
 }
 
+void RealEstatePortalSystem::manageUsers() {
+    vector<string> options = userManagementOptions();
+    displayOptions(options);
+    int choice = promptChoice(1, options.size());
+    handleUserManagementChoice(choice);
+}
+
 vector<string> RealEstatePortalSystem::userManagementOptions() {
     vector<string> options = {
-
+        "1. Remove User",
+        "2. Edit User"
     };
 
     return options;
+}
+
+void RealEstatePortalSystem::handleUserManagementChoice(int choice) {
+    switch (choice) {
+        case 1:
+            removeUserById();
+            break;
+        case 2:
+            editUserById();
+            break;
+        default:
+            cout << "Invalid choice. Please try again.\n" << endl;
+    }
+}
+
+void RealEstatePortalSystem::removeUserById() {
+    int id = promptUserId();
+
+    try {
+        accountsManager.removeUser(id);
+        cout << "User has been removed." << endl;
+    } catch (const UserNotFoundException& e) {
+        cout << e.what() << endl;
+    }
+}
+
+int RealEstatePortalSystem::promptUserId() {
+    cout << "Enter user ID: ";
+    int id;
+    cin >> id;
+
+    return id;
+}
+
+void RealEstatePortalSystem::editUserById() {
+    vector<string> options = accountsManager.editOptions();
+    displayOptions(options);
+
+    int choice = promptChoice(1, options.size());
+    int id = promptUserId();
+
+    try {
+        accountsManager.editUser(id, choice);
+    } catch (const UserNotFoundException& e) {
+        cout << e.what() << endl;
+    }
 }
 
 void RealEstatePortalSystem::manageProperties() {
     vector<string> options = propertyManagementOptions();
     displayOptions(options);
     int choice = promptChoice(1, options.size());
+    handlePropertyManagementChoice(choice);
 }
 
 vector<string> RealEstatePortalSystem::propertyManagementOptions() {
@@ -176,16 +234,16 @@ vector<string> RealEstatePortalSystem::propertyManagementOptions() {
     return options;
 }
 
-void RealEstatePortalSystem::handlePropertyManagementChoice(int choice, User& admin) {
+void RealEstatePortalSystem::handlePropertyManagementChoice(int choice) {
     switch (choice) {
         case 1:
-            submitNewProperty();
+            submitNewProperty(true);
             break;
         case 2:
             removePropertyById();
             break;
         case 3:
-            // Edit Property
+            editPropertyById();
             break;
         case 4:
             setHighlightById(true);
@@ -200,7 +258,13 @@ void RealEstatePortalSystem::handlePropertyManagementChoice(int choice, User& ad
 
 void RealEstatePortalSystem::removePropertyById() {
     int id = promptPropertyId();
-    propertiesManager.removeProperty(id);
+    
+    try {
+        propertiesManager.removeProperty(id);
+        cout << "Property has been removed." << endl;
+    } catch (const PropertyNotFoundException& e) {
+        cout << e.what() << endl;
+    }
 }
 
 int RealEstatePortalSystem::promptPropertyId() {
@@ -211,19 +275,38 @@ int RealEstatePortalSystem::promptPropertyId() {
     return id;
 }
 
+void RealEstatePortalSystem::editPropertyById() {
+    vector<string> options = propertiesManager.editOptions();
+    displayOptions(options);
+
+    int choice = promptChoice(1, options.size());
+    int id = promptPropertyId();
+
+    try {
+        propertiesManager.editProperty(id, choice);
+    } catch (const PropertyNotFoundException& e) {
+        cout << e.what() << endl;
+    }
+}
+
 void RealEstatePortalSystem::setHighlightById(bool highlight) {
     int id = promptPropertyId();
 
     if (highlight) {
-        propertiesManager.highlightProperty(id);
+        try {
+            propertiesManager.highlightProperty(id);
+            cout << "Property with ID " << id << " has been highlighted." << endl;
+        } catch (const PropertyNotFoundException& e) {
+            cout << e.what() << endl;
+        }
     } else {
-        propertiesManager.unhighlightProperty(id);
+        try {
+            propertiesManager.unhighlightProperty(id);
+            cout << "Property with ID " << id << " has been unhighlighted." << endl;
+        } catch (const PropertyNotFoundException& e) {
+            cout << e.what() << endl;
+        }
     }
-}
-
-void RealEstatePortalSystem::editPropertyById() {
-
-
 }
 
 void RealEstatePortalSystem::processPendingProperties() {
@@ -234,7 +317,7 @@ void RealEstatePortalSystem::processPendingProperties() {
             processNextPendingProperty();
             cout << "Do you want to process the next pending property? (y/n): ";
             cin >> choice;
-        } catch (const runtime_error& e) {
+        } catch (const PropertyNotFoundException& e) {
             cout << e.what() << endl;
             choice = 'n';
         }
@@ -243,7 +326,9 @@ void RealEstatePortalSystem::processPendingProperties() {
 
 void RealEstatePortalSystem::processNextPendingProperty() {
     Property property = propertiesManager.getNextPendingProperty();
+    cout << "\n----------------------------------" << endl;
     property.display();
+    cout << "----------------------------------\n" << endl;
 
     cout << "Do you want to approve this property? (y/n): ";
     char choice;
@@ -251,17 +336,17 @@ void RealEstatePortalSystem::processNextPendingProperty() {
 
     if (choice == 'y' || choice == 'Y') {
         propertiesManager.approvePendingProperty();
-        cout << "The Property has been approved." << endl;
+        cout << "The Property has been approved.\n" << endl;
     } else {
         propertiesManager.rejectPendingProperty();
-        cout << "The Property has been rejected." << endl;
+        cout << "The Property has been rejected.\n" << endl;
     }
 }
 
 void RealEstatePortalSystem::userPage(User& user) {
     cout << "\nWelcome, " << user.getUsername() << "!" << endl;
 
-    vector<string> options = userMenuOptions();
+    vector<string> options = userOptions();
     int choice = 0;
 
     do {
@@ -271,7 +356,7 @@ void RealEstatePortalSystem::userPage(User& user) {
     } while (choice != options.size());
 }
 
-vector<string> RealEstatePortalSystem::userMenuOptions() {
+vector<string> RealEstatePortalSystem::userOptions() {
     vector<string> options = {
         "1. Manage Profile",
         "2. Submit New Property",
@@ -287,10 +372,10 @@ vector<string> RealEstatePortalSystem::userMenuOptions() {
 void RealEstatePortalSystem::handleUserChoice(int choice, User& user) {
     switch (choice) {
         case 1:
-            // Manage Profile
+            manageProfile(user);
             break;
         case 2:
-            submitNewProperty();
+            submitNewProperty(false);
             break;
         case 3:
             propertiesManager.dispalayProperties();
@@ -309,7 +394,19 @@ void RealEstatePortalSystem::handleUserChoice(int choice, User& user) {
     }
 }
 
-void RealEstatePortalSystem::submitNewProperty() {
+void RealEstatePortalSystem::manageProfile(User& user) {
+    vector<string> options = accountsManager.editOptions();
+    displayOptions(options);
+    int choice = promptChoice(1, options.size());
+
+    try {
+        accountsManager.editUser(user.getId(), choice);
+    } catch (const UserNotFoundException& e) {
+        cout << e.what() << endl;
+    }
+}
+
+void RealEstatePortalSystem::submitNewProperty(bool isAdmin) {
     string name, type, state, city, street, apartmentNumber;
     int rooms;
     double areaInSquareMeters, price;
@@ -345,7 +442,7 @@ void RealEstatePortalSystem::submitNewProperty() {
 
     Location location = { state, city, street, apartmentNumber };
     PropertyDetails details = {rooms, areaInSquareMeters, price};
-    propertiesManager.submitPropertyData(name, type, location, details);
+    propertiesManager.submitPropertyData(name, type, location, details, isAdmin);
 }
 
 void RealEstatePortalSystem::searchPropertiesWithFilters() {
@@ -420,4 +517,3 @@ void RealEstatePortalSystem::compareProperties() {
         cout << "At least two properties are required for comparison." << endl;
     }
 }
-
