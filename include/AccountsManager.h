@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "User.h"
-#include "UserAlreadyExistsException.h"
-#include "UserNotFoundException.h"
+#include "../exceptions/UserAlreadyExistsException.h"
+#include "../exceptions/UserNotFoundException.h"
 
 class AccountsManager {
 private:
@@ -20,7 +20,6 @@ private:
     std::string promptUsername();
     std::string promptPassword();
 public:
-    AccountsManager();
     void registerPage();
     User loginPage();
     void removeUser(int id);
@@ -30,12 +29,9 @@ public:
     void editUsername(User& user);
     void editPassword(User& user);
 
-    void initialize();
+    void setUsers(const std::vector<User>& users);
+    std::vector<User> getUsers() const;
 };
-
-AccountsManager::AccountsManager() {
-    users.insert({"admin", User(0, "admin", "admin", true)});
-}
 
 void AccountsManager::registerPage() {
     std::string username = promptUsername();
@@ -165,7 +161,24 @@ void AccountsManager::editPassword(User& user) {
     std::cout << "User password updated successfully." << std::endl;
 }
 
-void AccountsManager::initialize() {
-    registerUser("Ahmed", "123");
-    registerUser("Mona", "123");
+void AccountsManager::setUsers(const std::vector<User>& users) {
+
+    for (const User& user : users) {
+        this->users.insert({user.getUsername(), user});
+        this->usersById.insert({user.getId(), user.getUsername()});
+
+        if (user.getId() > currentUserId) {
+            currentUserId = user.getId();
+        }
+    }
+}
+
+std::vector<User> AccountsManager::getUsers() const {
+    std::vector<User> userList;
+
+    for (const auto& pair : users) {
+        userList.push_back(pair.second);
+    }
+
+    return userList;
 }

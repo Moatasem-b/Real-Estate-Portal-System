@@ -27,8 +27,7 @@ private:
     bool highlighted;
 public:
     Property();
-    Property(int id, const std::string& name, const std::string& type,
-    const Location& location, const PropertyDetails& details,
+    Property(int id, const std::string& name, const std::string& type, const Location& location, const PropertyDetails& details,
     bool highlighted = false);
 
     void setName(const std::string& name);
@@ -52,10 +51,8 @@ public:
 };
 
 Property::Property() = default;
-Property::Property(int id, const std::string& name, const std::string& type,
-    const Location& location, const PropertyDetails& details, bool highlighted)
-    : id(id), name(name), type(type), location(location), details(details),
-    highlighted(highlighted) {}
+Property::Property(int id, const std::string& name, const std::string& type, const Location& location, const PropertyDetails& details, bool highlighted)
+    : id(id), name(name), type(type), location(location), details(details), highlighted(highlighted) {}
 
 void Property::setName(const std::string& name) { this->name = name; }
 void Property::setType(const std::string& type) { this->type = type; }

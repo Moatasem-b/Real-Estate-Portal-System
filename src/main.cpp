@@ -1,11 +1,11 @@
 #include <iostream>
-#include "RealEstatePortalSystem.h"
+#include "../include/RealEstatePortalSystem.h"
 
 using namespace std;
 
 int main() {
     RealEstatePortalSystem portal;
-    portal.homePage();
+    portal.start();
 
     return 0;
 }

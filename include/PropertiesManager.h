@@ -6,7 +6,7 @@
 #include <queue>
 
 #include "Property.h"
-#include "PropertyNotFoundException.h"
+#include "../exceptions/PropertyNotFoundException.h"
 
 using namespace std;
 
@@ -22,8 +22,7 @@ private:
     queue<Property> pendingProperties;
     int currentPropertyId = 0;
 public:
-    void submitPropertyData(const string& name, const string& type,
-        const Location& location, const PropertyDetails& details, bool isAdmin);
+    void submitPropertyData(const string& name, const string& type, const Location& location, const PropertyDetails& details, bool isAdmin);
     void insertProperty(const Property& property);
     void removeProperty(int id);
     Property getNextPendingProperty();
@@ -54,20 +53,23 @@ public:
     void editArea(Property& property);
     void editPrice(Property& property);
 
-    void initialize();
+    void setProperties(const vector<Property>& properties);
+    void setPendingtProperties(const vector<Property>& properties);
+
+    vector<Property> getProperties() const;
+    vector<Property> getPendingProperties() const;
 };
 
-void PropertiesManager::submitPropertyData(const string& name, const string& type,
-    const Location& location, const PropertyDetails& details, bool isAdmin) {
-        Property property(++currentPropertyId, name, type, location, details);
+void PropertiesManager::submitPropertyData(const string& name, const string& type, const Location& location, const PropertyDetails& details, bool isAdmin) {
+    Property property(++currentPropertyId, name, type, location, details);
 
-        if (isAdmin) {
-            insertProperty(property);
-            cout << "The property has been added successfully." << endl;
-        } else {
-            pendingProperties.push(property);
-            cout << "The property has been added to pending propertis successfully." << endl;
-        }
+    if (isAdmin) {
+        insertProperty(property);
+        cout << "The property has been added successfully." << endl;
+    } else {
+        pendingProperties.push(property);
+        cout << "The property has been added to pending propertis successfully." << endl;
+    }
 }
 
 void PropertiesManager::insertProperty(const Property& property) {
@@ -264,9 +266,7 @@ void PropertiesManager::highlightProperty(int id) {
 
     if (it != properties.end()) {
         it->second.setHighlighted(true);
-        // cout << "Property with ID " << id << " has been highlighted." << endl;
     } else {
-        // cout << "Property with ID " << id << " not found." << endl;
         throw PropertyNotFoundException("Property not found.");
     }
 }
@@ -276,9 +276,7 @@ void PropertiesManager::unhighlightProperty(int id) {
 
     if (it != properties.end()) {
         it->second.setHighlighted(false);
-        // cout << "Property with ID " << id << " has been unhighlighted." << endl;
     } else {
-        // cout << "Property with ID " << id << " not found." << endl;
         throw PropertyNotFoundException("Property not found.");
     }
 }
@@ -448,17 +446,44 @@ void PropertiesManager::editPrice(Property& property) {
     std::cout << "Property price updated successfully." << std::endl;
 }
 
-void PropertiesManager::initialize() {
-    submitPropertyData("Cozy Apartment", "Apartment", {"California", "Los Angeles", "Sunset Blvd", "101"}, {2, 55.5, 250000}, true);
-    submitPropertyData("Spacious House", "House", {"California", "Los Angeles", "Elm St", "202"}, {4, 150.0, 850000}, true);
-    // submitPropertyData("Luxury Condo", "Condo", {"California", "San Francisco", "Market St", "303"}, {3, 80.0, 600000}, true);
-    // submitPropertyData("Compact Studio", "Apartment", {"California", "Los Angeles", "Sunset Blvd", "104"}, {1, 35.0, 150000}, true);
-    // submitPropertyData("Modern Villa", "Villa", {"Texas", "Austin", "Lake View Rd", "505"}, {5, 200.0, 1200000}, true);
-    submitPropertyData("Traditional House", "House", {"Texas", "Houston", "Main St", "606"}, {4, 180.0, 700000}, false);
-    submitPropertyData("Cozy Cabin", "Cabin", {"Colorado", "Denver", "Mountain Rd", "707"}, {2, 100.0, 400000}, false);
-    // submitPropertyData("City Apartment", "Apartment", {"New York", "New York", "5th Ave", "808"}, {2, 65.0, 300000}, false);
-    // submitPropertyData("Penthouse Suite", "Condo", {"New York", "New York", "Park Ave", "909"}, {3, 120.0, 2000000}, false);
-    // submitPropertyData("Family House", "House", {"California", "San Francisco", "Mission St", "1010"}, {4, 160.0, 900000}, false);
+void PropertiesManager::setProperties(const vector<Property>& properties) {
+    for (const Property& property : properties) {
+        insertProperty(property);
 
-    currentPropertyId = 3;
+        if (property.getId() > currentPropertyId) {
+            currentPropertyId = property.getId();
+        }
+    }
+}
+
+void PropertiesManager::setPendingtProperties(const vector<Property>& properties) {
+    for (const Property& property : properties) {
+        pendingProperties.push(property);
+
+        if (property.getId() > currentPropertyId) {
+            currentPropertyId = property.getId();
+        }
+    }
+}
+
+vector<Property> PropertiesManager::getProperties() const {
+    vector<Property> propertyList;
+
+    for (const auto& pair : properties) {
+        propertyList.push_back(pair.second);
+    }
+
+    return propertyList;
+}
+
+vector<Property> PropertiesManager::getPendingProperties() const {
+    vector<Property> pendingPropertyList;
+    queue<Property> temp = pendingProperties;
+
+    while (!temp.empty()) {
+        pendingPropertyList.push_back(temp.front());
+        temp.pop();
+    }
+
+    return pendingPropertyList;
 }

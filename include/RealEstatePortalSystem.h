@@ -2,6 +2,7 @@
 
 #include "AccountsManager.h"
 #include "PropertiesManager.h"
+#include "FilesManager.h"
 
 using namespace std;
 
@@ -10,6 +11,7 @@ private:
     AccountsManager accountsManager;
     PropertiesManager propertiesManager;
 
+    void homePage();
     int promptChoice(int min, int max);
     void handleHomePageChoice(int choice);
     void adminPage(User& admin);
@@ -43,19 +45,38 @@ private:
     vector<string> searchFilterOptions();
     void compareProperties();
 public:
-    void homePage();
+    void start();
 };
+
+void RealEstatePortalSystem::start() {
+    FilesManager filesManager;
+
+    vector<User> users = filesManager.loadUsersFromFile("data/users.csv");
+    accountsManager.setUsers(users);
+
+    vector<Property> properties = filesManager.loadPropertiesFromFile("data/properties.csv");
+    propertiesManager.setProperties(properties);
+
+    vector<Property> pendingProperties = filesManager.loadPropertiesFromFile("data/pending_properties.csv");
+    propertiesManager.setPendingtProperties(pendingProperties);
+
+    homePage();
+
+    filesManager.saveUsersToFile("data/users.csv", accountsManager.getUsers());
+    filesManager.savePropertiesToFile("data/properties.csv", propertiesManager.getProperties());
+    filesManager.savePropertiesToFile("data/pending_properties.csv", propertiesManager.getPendingProperties());
+}
 
 void RealEstatePortalSystem::homePage() {
     cout << "Welcome to the Real Estate Portal!" << endl;
-    cout << "----------------------------------\n" << endl;
 
     int choice = 0;
-    accountsManager.initialize();
-    propertiesManager.initialize();
 
     do {
-        cout << "1. Register\n" << "2. Login\n" << "3. Exit\n" << endl;
+        cout << "----------------------------------" << endl;
+        cout << "1. Register\n" << "2. Login\n" << "3. Exit" << endl;
+        cout << "----------------------------------" << endl;
+
         choice = promptChoice(1, 3);
         cout << endl;
         handleHomePageChoice(choice);
@@ -95,10 +116,10 @@ void RealEstatePortalSystem::handleHomePageChoice(int choice) {
             }
             break;
         case 3:
-            cout << "Exiting the system..." << endl;
+            cout << "\nExiting the system..." << endl;
             break;
         default:
-            cout << "Invalid choice. Please try again." << endl;
+            cout << "\nInvalid choice. Please try again." << endl;
     }
 }
 
@@ -146,10 +167,10 @@ void RealEstatePortalSystem::handleAdminChoice(int choice) {
             processPendingProperties();
             break;
         case 4:
-            cout << "Logging out...\n" << endl;
+            cout << "\nLogging out...\n" << endl;
             break;
         default:
-            cout << "Invalid choice. Please try again.\n" << endl;
+            cout << "\nInvalid choice. Please try again.\n" << endl;
     }
 }
 
@@ -178,7 +199,7 @@ void RealEstatePortalSystem::handleUserManagementChoice(int choice) {
             editUserById();
             break;
         default:
-            cout << "Invalid choice. Please try again.\n" << endl;
+            cout << "\nInvalid choice. Please try again.\n" << endl;
     }
 }
 
